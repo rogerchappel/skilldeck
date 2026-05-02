@@ -1,0 +1,20 @@
+{
+  "project": "skilldeck",
+  "workspace": "/Users/roger/Developer/my-opensource/.worktrees/skilldeck-main",
+  "branch": "main",
+  "localFirst": true,
+  "networkAtRuntime": false,
+  "commands": {
+    "test": "npm test",
+    "build": "npm run build",
+    "check": "npm run check",
+    "smoke": "npm run smoke",
+    "validate": "bash scripts/validate.sh"
+  },
+  "targets": ["openclaw", "claude", "codex", "agents-md"],
+  "publish": {
+    "github": "rogerchappel/skilldeck",
+    "visibility": "public",
+    "defaultBranch": "main"
+  }
+}
