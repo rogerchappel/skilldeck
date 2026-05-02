@@ -1,50 +1,91 @@
 # skilldeck
 
-Local-first skill pack manager and verifier for agent instructions.
+Local-first skill pack manager and verifier for agent instructions across OpenClaw, Claude/Claude Code, Codex, and repo-local `AGENTS.md` workflows.
 
-## Status
-
-This repository is early-stage. Confirm the current support, release, and
-security posture before using it in production.
+`skilldeck` treats skills as ordinary folders with a `SKILL.md` entrypoint. It validates them, packages them into inspectable local `.skillpack` files, installs them only into explicit target directories, and reports compatibility with common agent setups.
 
 ## Install
 
-Replace this section with the generated repository's installation steps.
-
-```sh
-npm install
+```bash
+npm install -g skilldeck
 ```
 
-## Use
+During local development:
 
-Replace this section with the smallest useful example for the generated
-repository.
-
-```sh
-npx skilldeck --help
+```bash
+node src/cli.js --help
 ```
 
-## Verify
+## Quickstart
 
-Run the local validation script before opening a pull request:
+```bash
+# Validate a skill folder
+skilldeck validate ./my-skill --strict
 
-```sh
-npm test && bash scripts/validate.sh
+# Generate a compatibility report
+skilldeck compat ./my-skill --target openclaw --json
+
+# Package a transparent local pack
+skilldeck pack ./my-skill --out ./my-skill.skillpack --strict
+
+# Install into an explicit directory (never guessed)
+skilldeck install ./my-skill.skillpack --target-dir ~/.openclaw/workspace/agents/havoc/skills
 ```
 
-`scripts/validate.sh` runs the repository's standard local checks when they are defined and will also run `agent-qc ready` when `agent-qc` is installed. Missing `agent-qc` is treated as a skip, not a failure.
+## Skill folder shape
 
-## Contributing
+```text
+my-skill/
+  SKILL.md
+  actions/checklist.md
+```
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution expectations. Changes
-should be small, reviewable, and verified before review.
+Example `SKILL.md`:
 
-## Security
+```markdown
+---
+name: commit-helper
+description: Helps agents make small verifiable git commits.
+version: 1.0.0
+targets: [openclaw, claude, codex]
+---
+# Commit Helper
 
-See [SECURITY.md](SECURITY.md) for vulnerability reporting guidance. Replace
-the default security policy before publishing the generated repository.
+Use this skill when splitting changes into meaningful commits.
 
-These links assume this README has been copied to the generated repository root.
+## Steps
+
+1. Inspect the diff.
+2. Stage one intent at a time.
+3. Run the smallest useful verification.
+```
+
+## Commands
+
+- `validate <skill-dir> [--strict] [--json]`
+- `manifest <skill-dir> [--strict] [--json]`
+- `pack <skill-dir> --out <file.skillpack> [--strict] [--force] [--json]`
+- `install <skill-dir|pack.skillpack> --target-dir <dir> [--name <name>] [--strict] [--force] [--json]`
+- `compat <skill-dir> [--target openclaw|claude|codex|agents-md] [--strict] [--json]`
+
+## Safety model
+
+- No runtime network calls.
+- No marketplace, publish, or remote execution behavior.
+- No implicit install destinations; `--target-dir` is required.
+- No overwrite unless `--force` is explicit.
+- Path traversal is rejected during installs.
+- Packs are JSON and can be inspected before install.
+
+## Verification
+
+```bash
+npm test
+npm run build
+npm run check
+npm run smoke
+bash scripts/validate.sh
+```
 
 ## License
 
