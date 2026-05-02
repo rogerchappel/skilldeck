@@ -3,18 +3,35 @@
   "version": "0.1.0",
   "description": "Local-first skill pack manager and verifier for agent instructions.",
   "type": "module",
+  "bin": {
+    "skilldeck": "./src/cli.js"
+  },
   "main": "./src/index.js",
   "exports": {
     ".": "./src/index.js"
   },
   "files": [
     "src",
-    "README.md"
+    "README.md",
+    "docs"
   ],
   "scripts": {
+    "build": "node src/cli.js --version",
+    "check": "npm test && node src/cli.js validate test/fixtures/valid-skill --strict",
+    "smoke": "node src/cli.js compat test/fixtures/valid-skill --target openclaw && node src/cli.js pack test/fixtures/valid-skill --out .tmp/valid.skillpack --force && node src/cli.js install .tmp/valid.skillpack --target-dir .tmp/install --force",
     "test": "node --test"
   },
-  "keywords": [],
+  "keywords": [
+    "agents",
+    "skills",
+    "cli",
+    "openclaw",
+    "claude-code",
+    "codex"
+  ],
   "author": "Roger Chappel",
-  "license": "MIT"
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  }
 }
