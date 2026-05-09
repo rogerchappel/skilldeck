@@ -1,0 +1,13 @@
+{
+  "name": "skilldeck",
+  "version": "0.1.0",
+  "localFirst": true,
+  "network": "none",
+  "commands": [
+    { "name": "validate", "writes": false, "deterministic": true },
+    { "name": "report", "writes": false, "deterministic": true },
+    { "name": "install", "writes": true, "requiresDestination": true },
+    { "name": "pack", "writes": true, "requiresDestination": true }
+  ],
+  "targets": ["codex", "claude", "openclaw", "agents"]
+}
