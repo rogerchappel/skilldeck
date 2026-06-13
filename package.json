@@ -16,7 +16,10 @@
   },
   "files": [
     "dist/src",
+    "docs",
     "examples",
+    "fixtures",
+    "SKILL.md",
     "README.md",
     "LICENSE",
     "SECURITY.md",
