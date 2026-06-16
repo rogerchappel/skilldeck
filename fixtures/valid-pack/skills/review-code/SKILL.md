@@ -13,3 +13,5 @@ Use this skill when a user asks for a code review, release-readiness pass, or fo
 Start with findings ordered by severity. Ground each finding in a file and line when possible. Include missing tests or residual risk after the findings.
 
 Do not rewrite unrelated code during a review unless the user explicitly asks for implementation work.
+
+Validate by checking the referenced diff and confirming every finding has a file path.

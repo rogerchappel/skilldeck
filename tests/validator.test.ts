@@ -19,4 +19,5 @@ test("reports invalid metadata", async () => {
   assert.ok(result.diagnostics.some((diag) => diag.code === "invalid-name"));
   assert.ok(result.diagnostics.some((diag) => diag.code === "missing-description"));
   assert.ok(result.diagnostics.some((diag) => diag.code === "missing-version"));
+  assert.ok(result.diagnostics.some((diag) => diag.code === "missing-validation-notes"));
 });
