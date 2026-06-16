@@ -22,6 +22,7 @@ export async function validateSkillPack(root: string, options: { strict?: boolea
       const parsed = parseFrontmatter(markdown);
       const metadata = normalizeMetadata(parsed.data, entry.name, diagnostics, skillMdPath);
       validateMetadata(metadata, diagnostics, skillMdPath, options.strict === true);
+      validateSkillBody(parsed.body, diagnostics, skillMdPath, options.strict === true);
       skills.push({ name: metadata.name, path: skillDir, skillMdPath, metadata, body: parsed.body });
     } catch (error) {
       diagnostics.push({ severity: "error", code: "missing-skill-md", message: `Skill ${entry.name} must contain SKILL.md`, path: skillMdPath });
@@ -36,6 +37,20 @@ export async function validateSkillPack(root: string, options: { strict?: boolea
   }
   const ok = !diagnostics.some((diag) => diag.severity === "error");
   return { ok, root: absoluteRoot, skills, diagnostics };
+}
+
+function validateSkillBody(body: string, diagnostics: Diagnostic[], file: string, strict: boolean): void {
+  if (!/^#\s+\S/m.test(body)) {
+    diagnostics.push({ severity: "warning", code: "missing-title", message: "Skill body should start with a Markdown title.", path: file });
+  }
+  if (strict && !/\b(validate|validation|verify|verification|test|smoke)\b/i.test(body)) {
+    diagnostics.push({
+      severity: "warning",
+      code: "missing-validation-notes",
+      message: "Strict mode recommends validation or verification notes in SKILL.md.",
+      path: file
+    });
+  }
 }
 
 async function resolveSkillsRoot(root: string, diagnostics: Diagnostic[]): Promise<string | null> {

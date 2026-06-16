@@ -9,3 +9,5 @@ tags: [testing]
 # Write Tests
 
 Add fixtures first, cover edge cases, and keep tests runnable offline.
+
+Verify by running the affected test command and recording the result.
