@@ -26,6 +26,8 @@ Validate a pack:
 skilldeck validate ./fixtures/valid-pack --strict
 ```
 
+Strict validation requires each `SKILL.md` to include sections for when to use the skill, required inputs, side-effect boundaries, approval requirements, examples, and validation.
+
 Preview an install:
 
 ```sh
@@ -78,6 +80,8 @@ tags: [review]
 
 Instructions go here.
 ```
+
+For portable skills, use clear headings such as `## When To Use`, `## Inputs`, `## Side Effects`, `## Approval`, `## Examples`, and `## Validation`. These headings make review and installation safer across agent hosts.
 
 ## Supported targets
 

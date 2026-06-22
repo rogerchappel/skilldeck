@@ -8,8 +8,27 @@ tags: [review, quality]
 
 # Review Code
 
+## When To Use
+
 Use this skill when a user asks for a code review, release-readiness pass, or focused risk audit.
 
-Start with findings ordered by severity. Ground each finding in a file and line when possible. Include missing tests or residual risk after the findings.
+## Inputs
 
-Do not rewrite unrelated code during a review unless the user explicitly asks for implementation work.
+Use the repository diff, relevant tests, and any linked issue or PR context. Prefer local files and command output over memory.
+
+## Side Effects
+
+This skill is read-only by default. Do not rewrite unrelated code during a review unless the user explicitly asks for implementation work.
+
+## Approval
+
+Ask before running expensive, networked, or destructive commands. Do not push branches or change repo state during review-only work.
+
+## Examples
+
+- Review this PR for correctness and missing tests.
+- Do a release-readiness pass on this package.
+
+## Validation
+
+Start with findings ordered by severity. Ground each finding in a file and line when possible. Include missing tests or residual risk after the findings.
