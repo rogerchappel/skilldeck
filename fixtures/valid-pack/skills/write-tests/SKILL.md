@@ -32,3 +32,4 @@ Ask before installing dependencies, changing snapshots broadly, or running comma
 ## Validation
 
 Add fixtures first, cover edge cases, and keep tests runnable offline. Run the narrow test command before wider validation.
+Verify by running the affected test command and recording the result.

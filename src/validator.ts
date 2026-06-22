@@ -22,7 +22,7 @@ export async function validateSkillPack(root: string, options: { strict?: boolea
       const parsed = parseFrontmatter(markdown);
       const metadata = normalizeMetadata(parsed.data, entry.name, diagnostics, skillMdPath);
       validateMetadata(metadata, diagnostics, skillMdPath, options.strict === true);
-      validateBody(parsed.body, diagnostics, skillMdPath, options.strict === true);
+      validateSkillBody(parsed.body, diagnostics, skillMdPath, options.strict === true);
       skills.push({ name: metadata.name, path: skillDir, skillMdPath, metadata, body: parsed.body });
     } catch (error) {
       diagnostics.push({ severity: "error", code: "missing-skill-md", message: `Skill ${entry.name} must contain SKILL.md`, path: skillMdPath });
@@ -37,6 +37,36 @@ export async function validateSkillPack(root: string, options: { strict?: boolea
   }
   const ok = !diagnostics.some((diag) => diag.severity === "error");
   return { ok, root: absoluteRoot, skills, diagnostics };
+}
+
+function validateSkillBody(body: string, diagnostics: Diagnostic[], file: string, strict: boolean): void {
+  if (!body.trim()) {
+    diagnostics.push({ severity: "error", code: "missing-body", message: "SKILL.md must include instructions after frontmatter.", path: file });
+    return;
+  }
+  if (!/^#\s+\S/m.test(body)) {
+    diagnostics.push({ severity: "warning", code: "missing-title", message: "Skill body should start with a Markdown title.", path: file });
+  }
+  if (!strict) return;
+  if (!/\b(validate|validation|verify|verification|test|smoke)\b/i.test(body)) {
+    diagnostics.push({
+      severity: "warning",
+      code: "missing-validation-notes",
+      message: "Strict mode recommends validation or verification notes in SKILL.md.",
+      path: file
+    });
+  }
+  const requiredSections = [
+    { code: "missing-when-to-use", pattern: /(^|\n)#{1,3}\s*(when to use|use this skill|trigger)/i, label: "when to use" },
+    { code: "missing-inputs", pattern: /(^|\n)#{1,3}\s*(inputs|required inputs|requirements)/i, label: "inputs" },
+    { code: "missing-side-effects", pattern: /(^|\n)#{1,3}\s*(side effects|side-effect boundaries|safety)/i, label: "side-effect boundaries" },
+    { code: "missing-approval", pattern: /(^|\n)#{1,3}\s*(approval|approvals|consent)/i, label: "approval requirements" },
+    { code: "missing-examples", pattern: /(^|\n)#{1,3}\s*(examples|example prompts)/i, label: "examples" },
+    { code: "missing-validation", pattern: /(^|\n)#{1,3}\s*(validation|verification|verify)/i, label: "validation" }
+  ];
+  for (const section of requiredSections) {
+    if (!section.pattern.test(body)) diagnostics.push({ severity: "error", code: section.code, message: `Strict mode requires a ${section.label} section.`, path: file });
+  }
 }
 
 async function resolveSkillsRoot(root: string, diagnostics: Diagnostic[]): Promise<string | null> {
@@ -72,25 +102,6 @@ function validateMetadata(metadata: SkillMetadata, diagnostics: Diagnostic[], fi
   if (strict && !metadata.version) diagnostics.push({ severity: "error", code: "missing-version", message: "Strict mode requires version metadata.", path: file });
   for (const target of metadata.targets ?? []) {
     if (!KNOWN_TARGETS.has(target)) diagnostics.push({ severity: "warning", code: "unknown-target", message: `Unknown target: ${target}`, path: file });
-  }
-}
-
-function validateBody(body: string, diagnostics: Diagnostic[], file: string, strict: boolean): void {
-  if (!body.trim()) {
-    diagnostics.push({ severity: "error", code: "missing-body", message: "SKILL.md must include instructions after frontmatter.", path: file });
-    return;
-  }
-  if (!strict) return;
-  const requiredSections = [
-    { code: "missing-when-to-use", pattern: /(^|\n)#{1,3}\s*(when to use|use this skill|trigger)/i, label: "when to use" },
-    { code: "missing-inputs", pattern: /(^|\n)#{1,3}\s*(inputs|required inputs|requirements)/i, label: "inputs" },
-    { code: "missing-side-effects", pattern: /(^|\n)#{1,3}\s*(side effects|side-effect boundaries|safety)/i, label: "side-effect boundaries" },
-    { code: "missing-approval", pattern: /(^|\n)#{1,3}\s*(approval|approvals|consent)/i, label: "approval requirements" },
-    { code: "missing-examples", pattern: /(^|\n)#{1,3}\s*(examples|example prompts)/i, label: "examples" },
-    { code: "missing-validation", pattern: /(^|\n)#{1,3}\s*(validation|verification|verify)/i, label: "validation" }
-  ];
-  for (const section of requiredSections) {
-    if (!section.pattern.test(body)) diagnostics.push({ severity: "error", code: section.code, message: `Strict mode requires a ${section.label} section.`, path: file });
   }
 }
 

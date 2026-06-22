@@ -32,3 +32,4 @@ Ask before running expensive, networked, or destructive commands. Do not push br
 ## Validation
 
 Start with findings ordered by severity. Ground each finding in a file and line when possible. Include missing tests or residual risk after the findings.
+Validate by checking the referenced diff and confirming every finding has a file path.
