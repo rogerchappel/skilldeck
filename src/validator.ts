@@ -40,16 +40,32 @@ export async function validateSkillPack(root: string, options: { strict?: boolea
 }
 
 function validateSkillBody(body: string, diagnostics: Diagnostic[], file: string, strict: boolean): void {
+  if (!body.trim()) {
+    diagnostics.push({ severity: "error", code: "missing-body", message: "SKILL.md must include instructions after frontmatter.", path: file });
+    return;
+  }
   if (!/^#\s+\S/m.test(body)) {
     diagnostics.push({ severity: "warning", code: "missing-title", message: "Skill body should start with a Markdown title.", path: file });
   }
-  if (strict && !/\b(validate|validation|verify|verification|test|smoke)\b/i.test(body)) {
+  if (!strict) return;
+  if (!/\b(validate|validation|verify|verification|test|smoke)\b/i.test(body)) {
     diagnostics.push({
       severity: "warning",
       code: "missing-validation-notes",
       message: "Strict mode recommends validation or verification notes in SKILL.md.",
       path: file
     });
+  }
+  const requiredSections = [
+    { code: "missing-when-to-use", pattern: /(^|\n)#{1,3}\s*(when to use|use this skill|trigger)/i, label: "when to use" },
+    { code: "missing-inputs", pattern: /(^|\n)#{1,3}\s*(inputs|required inputs|requirements)/i, label: "inputs" },
+    { code: "missing-side-effects", pattern: /(^|\n)#{1,3}\s*(side effects|side-effect boundaries|safety)/i, label: "side-effect boundaries" },
+    { code: "missing-approval", pattern: /(^|\n)#{1,3}\s*(approval|approvals|consent)/i, label: "approval requirements" },
+    { code: "missing-examples", pattern: /(^|\n)#{1,3}\s*(examples|example prompts)/i, label: "examples" },
+    { code: "missing-validation", pattern: /(^|\n)#{1,3}\s*(validation|verification|verify)/i, label: "validation" }
+  ];
+  for (const section of requiredSections) {
+    if (!section.pattern.test(body)) diagnostics.push({ severity: "error", code: section.code, message: `Strict mode requires a ${section.label} section.`, path: file });
   }
 }
 
