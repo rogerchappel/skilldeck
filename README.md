@@ -107,8 +107,13 @@ Use `--dest` to override any destination. This is recommended in CI and tests.
 npm run check
 npm test
 npm run smoke
+npm run package:smoke
+npm run release:check
 bash scripts/validate.sh
 ```
+
+`npm run release:check` is the release-readiness gate for maintainers. It runs
+type checking, tests, the CLI smoke script, and a dry-run npm package review.
 
 ## License
 
