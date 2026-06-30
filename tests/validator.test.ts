@@ -27,3 +27,11 @@ test("reports invalid metadata", async () => {
   assert.ok(result.diagnostics.some((diag) => diag.code === "missing-validation"));
   assert.ok(result.diagnostics.some((diag) => diag.code === "missing-validation-notes"));
 });
+
+test("normalizes target and tag metadata for portable reports", async () => {
+  const result = await validateSkillPack(valid, { strict: true });
+  const reviewCode = result.skills.find((skill) => skill.name === "review-code");
+  assert.equal(result.ok, true);
+  assert.deepEqual(reviewCode?.metadata.targets, ["codex", "claude", "openclaw", "agents"]);
+  assert.deepEqual(reviewCode?.metadata.tags, ["review", "quality"]);
+});

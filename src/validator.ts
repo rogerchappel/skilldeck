@@ -91,8 +91,8 @@ function normalizeMetadata(data: Record<string, unknown>, fallbackName: string, 
     name,
     description,
     version: asString(data.version),
-    targets: asStringArray(data.targets),
-    tags: asStringArray(data.tags)
+    targets: asNormalizedStringArray(data.targets),
+    tags: asNormalizedStringArray(data.tags)
   };
 }
 
@@ -109,7 +109,11 @@ function asString(value: unknown): string | undefined {
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
 }
 
-function asStringArray(value: unknown): string[] | undefined {
+function asNormalizedStringArray(value: unknown): string[] | undefined {
   if (!Array.isArray(value)) return undefined;
-  return value.filter((item): item is string => typeof item === "string" && item.length > 0);
+  const items = value
+    .filter((item): item is string => typeof item === "string")
+    .map((item) => item.trim().toLowerCase())
+    .filter((item) => item.length > 0);
+  return [...new Set(items)];
 }
