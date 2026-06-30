@@ -2,8 +2,8 @@
 name: review-code
 description: Review code changes for correctness, safety, maintainability, and test coverage.
 version: 0.1.0
-targets: [codex, claude, openclaw, agents]
-tags: [review, quality]
+targets: [Codex, " claude ", openclaw, agents, codex]
+tags: [Review, quality, " review "]
 ---
 
 # Review Code
