@@ -19,6 +19,9 @@ test("reports invalid metadata", async () => {
   assert.ok(result.diagnostics.some((diag) => diag.code === "invalid-name"));
   assert.ok(result.diagnostics.some((diag) => diag.code === "missing-description"));
   assert.ok(result.diagnostics.some((diag) => diag.code === "missing-version"));
+  assert.ok(result.diagnostics.some((diag) => diag.code === "missing-side-effect-metadata"));
+  assert.ok(result.diagnostics.some((diag) => diag.code === "missing-approval-metadata"));
+  assert.ok(result.diagnostics.some((diag) => diag.code === "vague-activation"));
   assert.ok(result.diagnostics.some((diag) => diag.code === "missing-when-to-use"));
   assert.ok(result.diagnostics.some((diag) => diag.code === "missing-inputs"));
   assert.ok(result.diagnostics.some((diag) => diag.code === "missing-side-effects"));
@@ -34,4 +37,13 @@ test("normalizes target and tag metadata for portable reports", async () => {
   assert.equal(result.ok, true);
   assert.deepEqual(reviewCode?.metadata.targets, ["codex", "claude", "openclaw", "agents"]);
   assert.deepEqual(reviewCode?.metadata.tags, ["review", "quality"]);
+});
+
+test("keeps activation and side-effect metadata in validation results", async () => {
+  const result = await validateSkillPack(valid, { strict: true });
+  const writeTests = result.skills.find((skill) => skill.name === "write-tests");
+  assert.equal(result.ok, true);
+  assert.deepEqual(writeTests?.metadata.activation, ["add regression tests", "create fixture-backed coverage"]);
+  assert.deepEqual(writeTests?.metadata.sideEffects, ["edits tests and fixtures"]);
+  assert.deepEqual(writeTests?.metadata.approvalRequired, ["dependency installs", "broad snapshot updates"]);
 });

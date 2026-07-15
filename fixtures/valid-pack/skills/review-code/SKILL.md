@@ -4,6 +4,9 @@ description: Review code changes for correctness, safety, maintainability, and t
 version: 0.1.0
 targets: [Codex, " claude ", openclaw, agents, codex]
 tags: [Review, quality, " review "]
+activation: [review this pull request, audit this code change]
+sideEffects: [read-only repository inspection]
+approvalRequired: [network commands, branch pushes]
 ---
 
 # Review Code
