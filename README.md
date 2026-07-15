@@ -26,7 +26,7 @@ Validate a pack:
 skilldeck validate ./fixtures/valid-pack --strict
 ```
 
-Strict validation requires each `SKILL.md` to include sections for when to use the skill, required inputs, side-effect boundaries, approval requirements, examples, and validation.
+Strict validation requires each `SKILL.md` to include sections for when to use the skill, required inputs, side-effect boundaries, approval requirements, examples, and validation. It also requires portable frontmatter for `activation`, `sideEffects`, and `approvalRequired` so agents can route and review skills before installation.
 
 Preview an install:
 
@@ -74,6 +74,9 @@ description: Review code changes for correctness, safety, and maintainability.
 version: 0.1.0
 targets: [codex, claude, openclaw, agents]
 tags: [review]
+activation: [review this pull request, audit this code change]
+sideEffects: [read-only repository inspection]
+approvalRequired: [network commands, branch pushes]
 ---
 
 # Review Code
@@ -81,7 +84,7 @@ tags: [review]
 Instructions go here.
 ```
 
-For portable skills, use clear headings such as `## When To Use`, `## Inputs`, `## Side Effects`, `## Approval`, `## Examples`, and `## Validation`. These headings make review and installation safer across agent hosts.
+For portable skills, use clear headings such as `## When To Use`, `## Inputs`, `## Side Effects`, `## Approval`, `## Examples`, and `## Validation`. These headings make review and installation safer across agent hosts. Keep activation phrases specific enough to match user intent, and list any side effects or approvals in both frontmatter and body text.
 
 ## Supported targets
 

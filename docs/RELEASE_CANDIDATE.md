@@ -10,6 +10,7 @@
 
 - Local validation for single-skill folders and nested skill packs.
 - Compatibility reports for Codex, Claude, OpenClaw, and repo-local `.agents` destinations.
+- Strict activation, side-effect, and approval metadata checks for portable skill review.
 - Copy-only installer with dry-run and destination override support.
 - Documentation-to-skill pack generation for local docs.
 - Public fixture pack for README examples and CLI smoke usage.
@@ -21,7 +22,7 @@ npm install
 npm run release:check
 ```
 
-Expected result: TypeScript check, tests, smoke script, and package dry run all pass.
+Expected result: TypeScript check, tests, smoke script, and package dry run all pass. Fixture validation should include activation routing metadata and side-effect review fields.
 
 ## Limits
 
