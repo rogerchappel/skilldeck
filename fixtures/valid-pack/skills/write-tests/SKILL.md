@@ -4,6 +4,9 @@ description: Generate focused tests for deterministic local software changes.
 version: 0.1.0
 targets: [codex, openclaw, agents]
 tags: [testing]
+activation: [add regression tests, create fixture-backed coverage]
+sideEffects: [edits tests and fixtures]
+approvalRequired: [dependency installs, broad snapshot updates]
 ---
 
 # Write Tests

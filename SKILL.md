@@ -4,6 +4,9 @@ description: Validate, report on, pack, and locally install reusable agent skill
 version: 0.1.0
 targets: [codex, claude, openclaw, agents]
 tags: [skills, installer, compatibility, local-first]
+activation: [validate this skill pack, install these agent skills, create a compatibility report]
+sideEffects: [copies local skill files, writes generated skill folders]
+approvalRequired: [live agent home installs, force overwrites, standing workflow adoption]
 ---
 
 # skilldeck
@@ -22,6 +25,7 @@ Use this skill when an agent needs to inspect or move existing `SKILL.md` folder
 - `skilldeck report <path> --json` creates a deterministic compatibility report.
 - `skilldeck install <path> --target <target> --dest <dir> --dry-run` previews copied files.
 - `skilldeck pack <docsDir> --name <skill-name> --out <dir>` creates a starter skill from local docs.
+- Strict validation expects `activation`, `sideEffects`, and `approvalRequired` frontmatter arrays in portable skill packs.
 
 ## Side Effects
 

@@ -7,6 +7,7 @@
 - [x] Define skill folder and `SKILL.md` validation rules.
 - [x] Implement deterministic frontmatter parser.
 - [x] Implement strict validation mode.
+- [x] Validate activation, side-effect, and approval frontmatter in strict mode.
 - [x] Implement target adapters for Codex, Claude Code, OpenClaw, and repo-local AGENTS decks.
 - [x] Implement dry-run and real local install flows.
 - [x] Implement compatibility report generation.
@@ -19,6 +20,6 @@
 ## Later
 
 - [ ] Add signed pack manifests.
-- [ ] Add richer Markdown metadata validation.
+- [x] Add richer Markdown metadata validation for portable agent routing fields.
 - [ ] Add migration helpers for existing personal skill folders.
 - [ ] Add optional JSON schema output.
