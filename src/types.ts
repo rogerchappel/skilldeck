@@ -6,6 +6,9 @@ export interface SkillMetadata {
   version?: string;
   targets?: string[];
   tags?: string[];
+  activation?: string[];
+  sideEffects?: string[];
+  approvalRequired?: string[];
 }
 
 export interface Skill {

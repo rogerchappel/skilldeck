@@ -92,7 +92,10 @@ function normalizeMetadata(data: Record<string, unknown>, fallbackName: string, 
     description,
     version: asString(data.version),
     targets: asNormalizedStringArray(data.targets),
-    tags: asNormalizedStringArray(data.tags)
+    tags: asNormalizedStringArray(data.tags),
+    activation: asNormalizedStringArray(data.activation),
+    sideEffects: asNormalizedStringArray(data.sideEffects),
+    approvalRequired: asNormalizedStringArray(data.approvalRequired)
   };
 }
 
@@ -100,8 +103,14 @@ function validateMetadata(metadata: SkillMetadata, diagnostics: Diagnostic[], fi
   if (!NAME_RE.test(metadata.name)) diagnostics.push({ severity: "error", code: "invalid-name", message: `Invalid skill name: ${metadata.name}`, path: file });
   if (!metadata.description || metadata.description.length < 12) diagnostics.push({ severity: "error", code: "missing-description", message: "Skill description must be at least 12 characters.", path: file });
   if (strict && !metadata.version) diagnostics.push({ severity: "error", code: "missing-version", message: "Strict mode requires version metadata.", path: file });
+  if (strict && (metadata.activation?.length ?? 0) === 0) diagnostics.push({ severity: "error", code: "missing-activation", message: "Strict mode requires activation metadata.", path: file });
+  if (strict && (metadata.sideEffects?.length ?? 0) === 0) diagnostics.push({ severity: "error", code: "missing-side-effect-metadata", message: "Strict mode requires sideEffects metadata.", path: file });
+  if (strict && (metadata.approvalRequired?.length ?? 0) === 0) diagnostics.push({ severity: "error", code: "missing-approval-metadata", message: "Strict mode requires approvalRequired metadata.", path: file });
   for (const target of metadata.targets ?? []) {
     if (!KNOWN_TARGETS.has(target)) diagnostics.push({ severity: "warning", code: "unknown-target", message: `Unknown target: ${target}`, path: file });
+  }
+  for (const activation of metadata.activation ?? []) {
+    if (activation.split(/\s+/).length < 3) diagnostics.push({ severity: "warning", code: "vague-activation", message: `Activation prompt is too vague: ${activation}`, path: file });
   }
 }
 
