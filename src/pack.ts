@@ -1,9 +1,20 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { isValidSkillName, SKILL_NAME_CONSTRAINT } from "./skill-name.js";
 
 export async function createSkillFromDocs(options: { docsDir: string; outDir: string; name: string; description?: string; force?: boolean }): Promise<string> {
+  if (!isValidSkillName(options.name)) {
+    throw new Error(`Invalid skill name '${options.name}': expected ${SKILL_NAME_CONSTRAINT}.`);
+  }
+
   const docsDir = path.resolve(options.docsDir);
-  const outDir = path.resolve(options.outDir, options.name);
+  const outputRoot = path.resolve(options.outDir);
+  const outDir = path.resolve(outputRoot, options.name);
+  const relativeDestination = path.relative(outputRoot, outDir);
+  if (!relativeDestination || relativeDestination === ".." || relativeDestination.startsWith(`..${path.sep}`) || path.isAbsolute(relativeDestination)) {
+    throw new Error(`Refusing to create skill outside the output directory: ${outDir}`);
+  }
+
   if (!options.force && await exists(outDir)) throw new Error(`Refusing to overwrite existing output: ${outDir}`);
   if (options.force === true) await fs.rm(outDir, { recursive: true, force: true });
   await fs.mkdir(outDir, { recursive: true });
