@@ -5,7 +5,7 @@ interface Parsed { command?: string; args: string[]; flags: Record<string, strin
 
 async function main(argv: string[]): Promise<number> {
   const parsed = parse(argv);
-  if (!parsed.command || parsed.flags.help || parsed.flags.h) { printHelp(); return 0; }
+  if (!parsed.command || parsed.command === "--help" || parsed.command === "-h" || parsed.flags.help || parsed.flags.h) { printHelp(); return 0; }
   try {
     switch (parsed.command) {
       case "validate": {
