@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
@@ -23,6 +23,58 @@ test("packs local docs into a SKILL.md", async () => {
     const skill = await readFile(path.join(created, "SKILL.md"), "utf8");
     assert.match(skill, /name: project-docs/);
     assert.match(skill, /Use these local project instructions/);
+  } finally {
+    await rm(temp, { recursive: true, force: true });
+  }
+});
+
+test("rejects invalid skill names without changing the filesystem", async () => {
+  const temp = await mkdtemp(path.join(os.tmpdir(), "skilldeck-pack-invalid-"));
+  const outDir = path.join(temp, "out");
+  const sentinelDir = path.join(temp, "sentinel");
+  const sentinel = path.join(sentinelDir, "keep.txt");
+  const invalidNames = [
+    { name: "../escaped", force: false },
+    { name: "../sentinel", force: true },
+    { name: path.join(temp, "absolute"), force: true },
+    { name: ".", force: false },
+    { name: "..", force: true },
+    { name: "nested/name", force: false },
+    { name: "nested\\name", force: true },
+    { name: "%2e%2e%2fescaped", force: true },
+    { name: "..%2Fescaped", force: false }
+  ];
+
+  try {
+    await mkdir(sentinelDir, { recursive: true });
+    await writeFile(sentinel, "keep", "utf8");
+
+    for (const options of invalidNames) {
+      await assert.rejects(
+        createSkillFromDocs({ docsDir: path.join(temp, "missing-docs"), outDir, ...options }),
+        /Invalid skill name/
+      );
+    }
+
+    assert.equal(await readFile(sentinel, "utf8"), "keep");
+    await assert.rejects(readdir(outDir), { code: "ENOENT" });
+  } finally {
+    await rm(temp, { recursive: true, force: true });
+  }
+});
+
+test("keeps valid skill names inside the output directory", async () => {
+  const temp = await mkdtemp(path.join(os.tmpdir(), "skilldeck-pack-valid-"));
+  try {
+    const outDir = path.join(temp, "out");
+    const created = await createSkillFromDocs({
+      docsDir: path.join(process.cwd(), "docs"),
+      outDir,
+      name: "project-docs-2"
+    });
+
+    assert.equal(created, path.join(outDir, "project-docs-2"));
+    assert.match(await readFile(path.join(created, "SKILL.md"), "utf8"), /name: project-docs-2/);
   } finally {
     await rm(temp, { recursive: true, force: true });
   }
