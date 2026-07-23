@@ -52,6 +52,12 @@ Create a skill from local docs:
 skilldeck pack ./docs --name project-docs --out ./skills
 ```
 
+Skill names must contain 2–63 lowercase letters, numbers, or hyphens and start
+with a letter or number. `pack` creates that named directory directly beneath
+`--out`; path separators, dot segments, absolute paths, and encoded traversal
+strings are rejected before any output is changed. Use `--force` only to
+replace an existing validly named skill inside `--out`.
+
 ## Skill layout
 
 A pack is either a single skill folder with `SKILL.md`, or a pack with nested skills:
@@ -101,6 +107,7 @@ Use `--dest` to override any destination. This is recommended in CI and tests.
 - No hidden network access.
 - No skill execution.
 - Install is copy-only into the chosen destination.
+- Pack output is confined to a validly named child directory beneath `--out`.
 - Existing skills are skipped unless `--force` is supplied.
 - Compatibility reports use a fixed timestamp for stable output.
 

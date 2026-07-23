@@ -1,9 +1,9 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { parseFrontmatter } from "./frontmatter.js";
+import { isValidSkillName } from "./skill-name.js";
 import type { Diagnostic, Skill, SkillMetadata, ValidationResult } from "./types.js";
 
-const NAME_RE = /^[a-z0-9][a-z0-9-]{1,62}$/;
 const KNOWN_TARGETS = new Set(["codex", "claude", "openclaw", "agents"]);
 
 export async function validateSkillPack(root: string, options: { strict?: boolean } = {}): Promise<ValidationResult> {
@@ -100,7 +100,7 @@ function normalizeMetadata(data: Record<string, unknown>, fallbackName: string, 
 }
 
 function validateMetadata(metadata: SkillMetadata, diagnostics: Diagnostic[], file: string, strict: boolean): void {
-  if (!NAME_RE.test(metadata.name)) diagnostics.push({ severity: "error", code: "invalid-name", message: `Invalid skill name: ${metadata.name}`, path: file });
+  if (!isValidSkillName(metadata.name)) diagnostics.push({ severity: "error", code: "invalid-name", message: `Invalid skill name: ${metadata.name}`, path: file });
   if (!metadata.description || metadata.description.length < 12) diagnostics.push({ severity: "error", code: "missing-description", message: "Skill description must be at least 12 characters.", path: file });
   if (strict && !metadata.version) diagnostics.push({ severity: "error", code: "missing-version", message: "Strict mode requires version metadata.", path: file });
   if (strict && (metadata.activation?.length ?? 0) === 0) diagnostics.push({ severity: "error", code: "missing-activation", message: "Strict mode requires activation metadata.", path: file });

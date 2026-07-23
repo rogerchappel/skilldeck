@@ -5,7 +5,7 @@ interface Parsed { command?: string; args: string[]; flags: Record<string, strin
 
 async function main(argv: string[]): Promise<number> {
   const parsed = parse(argv);
-  if (!parsed.command || parsed.flags.help || parsed.flags.h) { printHelp(); return 0; }
+  if (!parsed.command || parsed.command === "--help" || parsed.command === "-h" || parsed.flags.help || parsed.flags.h) { printHelp(); return 0; }
   try {
     switch (parsed.command) {
       case "validate": {
@@ -76,7 +76,7 @@ function human(value: unknown): string {
 }
 
 function printHelp(): void {
-  console.log(`skilldeck - local-first skill pack manager\n\nUsage:\n  skilldeck validate [path] [--strict] [--json]\n  skilldeck report [path] [--json]\n  skilldeck install [path] --target <codex|claude|openclaw|agents> [--dest DIR] [--dry-run] [--force]\n  skilldeck pack [docsDir] --name <skill-name> [--out skills] [--description text]\n\nNo command performs network access. Install writes only to the selected local destination.`);
+  console.log(`skilldeck - local-first skill pack manager\n\nUsage:\n  skilldeck validate [path] [--strict] [--json]\n  skilldeck report [path] [--json]\n  skilldeck install [path] --target <codex|claude|openclaw|agents> [--dest DIR] [--dry-run] [--force]\n  skilldeck pack [docsDir] --name <skill-name> [--out skills] [--description text] [--force]\n\nSkill names must be 2-63 lowercase letters, numbers, or hyphens and start with a letter or number. Pack always creates the skill as a child of --out.\n\nNo command performs network access. Install writes only to the selected local destination.`);
 }
 
 main(process.argv.slice(2)).then((code) => { process.exitCode = code; });
