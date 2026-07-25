@@ -50,6 +50,7 @@ Create a skill from local docs:
 
 ```sh
 skilldeck pack ./docs --name project-docs --out ./skills
+skilldeck validate ./skills/project-docs --strict
 ```
 
 Skill names must contain 2–63 lowercase letters, numbers, or hyphens and start
@@ -57,6 +58,11 @@ with a letter or number. `pack` creates that named directory directly beneath
 `--out`; path separators, dot segments, absolute paths, and encoded traversal
 strings are rejected before any output is changed. Use `--force` only to
 replace an existing validly named skill inside `--out`.
+
+Generated skills include portable activation, side-effect, and approval
+metadata plus the operational sections required by strict validation. The
+embedded documentation is sorted by filename, so identical inputs produce
+identical `SKILL.md` output.
 
 ## Skill layout
 
