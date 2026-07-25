@@ -9,27 +9,26 @@ const KNOWN_TARGETS = new Set(["codex", "claude", "openclaw", "agents"]);
 export async function validateSkillPack(root: string, options: { strict?: boolean } = {}): Promise<ValidationResult> {
   const absoluteRoot = path.resolve(root);
   const diagnostics: Diagnostic[] = [];
-  const skillsRoot = await resolveSkillsRoot(absoluteRoot, diagnostics);
+  const layout = await resolveSkillLayout(absoluteRoot, diagnostics);
   const skills: Skill[] = [];
 
-  if (!skillsRoot) return { ok: false, root: absoluteRoot, skills, diagnostics };
-  const entries = await fs.readdir(skillsRoot, { withFileTypes: true });
-  for (const entry of entries.filter((item) => item.isDirectory()).sort((a, b) => a.name.localeCompare(b.name))) {
-    const skillDir = path.join(skillsRoot, entry.name);
+  if (!layout) return { ok: false, root: absoluteRoot, skills, diagnostics };
+  for (const skillDir of layout.skillDirectories) {
+    const entryName = path.basename(skillDir);
     const skillMdPath = path.join(skillDir, "SKILL.md");
     try {
       const markdown = await fs.readFile(skillMdPath, "utf8");
       const parsed = parseFrontmatter(markdown);
-      const metadata = normalizeMetadata(parsed.data, entry.name, diagnostics, skillMdPath);
+      const metadata = normalizeMetadata(parsed.data, entryName, diagnostics, skillMdPath);
       validateMetadata(metadata, diagnostics, skillMdPath, options.strict === true);
       validateSkillBody(parsed.body, diagnostics, skillMdPath, options.strict === true);
       skills.push({ name: metadata.name, path: skillDir, skillMdPath, metadata, body: parsed.body });
     } catch (error) {
-      diagnostics.push({ severity: "error", code: "missing-skill-md", message: `Skill ${entry.name} must contain SKILL.md`, path: skillMdPath });
+      diagnostics.push({ severity: "error", code: "missing-skill-md", message: `Skill ${entryName} must contain SKILL.md`, path: skillMdPath });
     }
   }
 
-  if (skills.length === 0) diagnostics.push({ severity: "error", code: "empty-pack", message: "No skill directories were found.", path: skillsRoot });
+  if (skills.length === 0) diagnostics.push({ severity: "error", code: "empty-pack", message: "No skill directories were found.", path: layout.skillsRoot });
   const names = new Set<string>();
   for (const skill of skills) {
     if (names.has(skill.name)) diagnostics.push({ severity: "error", code: "duplicate-skill", message: `Duplicate skill name: ${skill.name}`, path: skill.path });
@@ -69,16 +68,23 @@ function validateSkillBody(body: string, diagnostics: Diagnostic[], file: string
   }
 }
 
-async function resolveSkillsRoot(root: string, diagnostics: Diagnostic[]): Promise<string | null> {
+async function resolveSkillLayout(root: string, diagnostics: Diagnostic[]): Promise<{ skillsRoot: string; skillDirectories: string[] } | null> {
   const direct = path.join(root, "SKILL.md");
   try {
     await fs.access(direct);
-    return path.dirname(direct);
+    return { skillsRoot: root, skillDirectories: [root] };
   } catch {}
   const nested = path.join(root, "skills");
   try {
     const stat = await fs.stat(nested);
-    if (stat.isDirectory()) return nested;
+    if (stat.isDirectory()) {
+      const entries = await fs.readdir(nested, { withFileTypes: true });
+      const skillDirectories = entries
+        .filter((entry) => entry.isDirectory())
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .map((entry) => path.join(nested, entry.name));
+      return { skillsRoot: nested, skillDirectories };
+    }
   } catch {}
   diagnostics.push({ severity: "error", code: "missing-skills-root", message: "Expected SKILL.md or a skills/ directory.", path: root });
   return null;

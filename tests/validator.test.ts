@@ -5,11 +5,32 @@ import { validateSkillPack } from "../src/validator.js";
 
 const valid = path.join(process.cwd(), "fixtures/valid-pack");
 const invalid = path.join(process.cwd(), "fixtures/invalid-pack");
+const singleSkill = path.join(valid, "skills/review-code");
 
 test("validates a deterministic skill pack", async () => {
   const result = await validateSkillPack(valid, { strict: true });
   assert.equal(result.ok, true);
   assert.deepEqual(result.skills.map((skill) => skill.name), ["review-code", "write-tests"]);
+  assert.deepEqual(result.skills.map((skill) => skill.path), [
+    path.join(valid, "skills/review-code"),
+    path.join(valid, "skills/write-tests")
+  ]);
+  assert.equal(result.diagnostics.length, 0);
+});
+
+test("validates a single skill directory as the skill itself", async () => {
+  const result = await validateSkillPack(singleSkill, { strict: true });
+  assert.equal(result.ok, true);
+  assert.equal(result.root, singleSkill);
+  assert.deepEqual(result.skills.map((skill) => ({
+    name: skill.name,
+    path: skill.path,
+    skillMdPath: skill.skillMdPath
+  })), [{
+    name: "review-code",
+    path: singleSkill,
+    skillMdPath: path.join(singleSkill, "SKILL.md")
+  }]);
   assert.equal(result.diagnostics.length, 0);
 });
 
