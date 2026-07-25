@@ -5,6 +5,7 @@ import path from "node:path";
 import { test } from "node:test";
 import { createSkillFromDocs } from "../src/pack.js";
 import { createCompatibilityReport } from "../src/report.js";
+import { validateSkillPack } from "../src/validator.js";
 
 const valid = path.join(process.cwd(), "fixtures/valid-pack");
 
@@ -16,13 +17,21 @@ test("creates deterministic compatibility reports", async () => {
   assert.ok(report.targets.claude.warnings.some((warning) => warning.includes("write-tests")));
 });
 
-test("packs local docs into a SKILL.md", async () => {
+test("packs local docs into a deterministic, strictly valid SKILL.md", async () => {
   const temp = await mkdtemp(path.join(os.tmpdir(), "skilldeck-pack-"));
   try {
-    const created = await createSkillFromDocs({ docsDir: path.join(process.cwd(), "docs"), outDir: temp, name: "project-docs" });
+    const options = { docsDir: path.join(process.cwd(), "docs"), name: "project-docs" };
+    const created = await createSkillFromDocs({ ...options, outDir: path.join(temp, "first") });
+    const repeated = await createSkillFromDocs({ ...options, outDir: path.join(temp, "second") });
     const skill = await readFile(path.join(created, "SKILL.md"), "utf8");
+    const repeatedSkill = await readFile(path.join(repeated, "SKILL.md"), "utf8");
     assert.match(skill, /name: project-docs/);
     assert.match(skill, /Use these local project instructions/);
+    assert.equal(skill, repeatedSkill);
+
+    const validation = await validateSkillPack(created, { strict: true });
+    assert.equal(validation.ok, true, validation.diagnostics.map((diagnostic) => `${diagnostic.code}: ${diagnostic.message}`).join("\n"));
+    assert.deepEqual(validation.diagnostics, []);
   } finally {
     await rm(temp, { recursive: true, force: true });
   }
