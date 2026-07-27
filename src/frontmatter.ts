@@ -1,8 +1,7 @@
 export function parseFrontmatter(markdown: string): { data: Record<string, unknown>; body: string } {
-  if (!markdown.startsWith("---\n")) return { data: {}, body: markdown };
-  const end = markdown.indexOf("\n---", 4);
-  if (end === -1) return { data: {}, body: markdown };
-  const raw = markdown.slice(4, end).trim();
+  const match = /^---\r?\n([\s\S]*?)^---(?:\r?\n|$)/m.exec(markdown);
+  if (!match) return { data: {}, body: markdown };
+  const raw = match[1].trim();
   const data: Record<string, unknown> = {};
   for (const line of raw.split(/\r?\n/)) {
     const trimmed = line.trim();
@@ -13,8 +12,7 @@ export function parseFrontmatter(markdown: string): { data: Record<string, unkno
     const value = trimmed.slice(colon + 1).trim();
     data[key] = parseValue(value);
   }
-  const bodyStart = markdown.indexOf("\n", end + 4);
-  return { data, body: bodyStart === -1 ? "" : markdown.slice(bodyStart + 1) };
+  return { data, body: markdown.slice(match[0].length) };
 }
 
 function parseValue(value: string): unknown {
