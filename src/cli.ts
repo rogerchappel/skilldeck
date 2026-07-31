@@ -4,9 +4,9 @@ import { createSkillFromDocs, createCompatibilityReport, installSkillPack, valid
 interface Parsed { command?: string; args: string[]; flags: Record<string, string | boolean>; }
 
 async function main(argv: string[]): Promise<number> {
-  const parsed = parse(argv);
-  if (!parsed.command || parsed.command === "--help" || parsed.command === "-h" || parsed.flags.help || parsed.flags.h) { printHelp(); return 0; }
   try {
+    const parsed = parse(argv);
+    if (!parsed.command || parsed.command === "--help" || parsed.command === "-h" || parsed.flags.help || parsed.flags.h) { printHelp(); return 0; }
     switch (parsed.command) {
       case "validate": {
         const root = parsed.args[0] ?? ".";
@@ -46,16 +46,30 @@ async function main(argv: string[]): Promise<number> {
 
 function parse(argv: string[]): Parsed {
   const [command, ...rest] = argv;
+  const optionSets: Record<string, { boolean: string[]; value: string[] }> = {
+    validate: { boolean: ["help", "json", "strict"], value: [] },
+    report: { boolean: ["help", "json"], value: [] },
+    install: { boolean: ["help", "json", "strict", "dry-run", "force"], value: ["target", "dest"] },
+    pack: { boolean: ["help", "json", "force"], value: ["name", "out", "description"] },
+  };
+  const options = optionSets[command ?? ""];
+  const booleanOptions = new Set(options?.boolean ?? ["help"]);
+  const valueOptions = new Set(options?.value ?? []);
   const args: string[] = [];
   const flags: Record<string, string | boolean> = {};
   for (let i = 0; i < rest.length; i += 1) {
     const token = rest[i];
     if (token.startsWith("--")) {
       const key = token.slice(2);
-      const next = rest[i + 1];
-      if (next && !next.startsWith("--")) { flags[key] = next; i += 1; }
-      else flags[key] = true;
-    } else if (token.startsWith("-") && token.length > 1) flags[token.slice(1)] = true;
+      if (booleanOptions.has(key)) flags[key] = true;
+      else if (valueOptions.has(key)) {
+        const next = rest[i + 1];
+        if (!next || next.startsWith("-")) throw new Error(`Option '--${key}' requires a value.`);
+        flags[key] = next;
+        i += 1;
+      } else throw new Error(`Unknown option '--${key}'.`);
+    } else if (token === "-h") flags.h = true;
+    else if (token.startsWith("-") && token.length > 1) throw new Error(`Unknown option '${token}'.`);
     else args.push(token);
   }
   return { command, args, flags };
