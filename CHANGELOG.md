@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Parse CLI boolean and value-taking options explicitly so flags can safely precede positional paths, with clear errors for missing values and unknown options.
 - Accept LF and CRLF line endings in `SKILL.md` frontmatter.
 - Reject invalid or escaping `pack` skill names before checking, removing, or writing output.
 
