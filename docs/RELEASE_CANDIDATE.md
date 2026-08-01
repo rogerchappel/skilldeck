@@ -22,7 +22,9 @@ npm install
 npm run release:check
 ```
 
-Expected result: TypeScript check, tests, smoke script, and package dry run all pass. Fixture validation should include activation routing metadata and side-effect review fields.
+Expected result: TypeScript check, tests, smoke script, and an isolated install
+of the produced package tarball all pass. The installed `skilldeck` executable
+must print help and strictly validate the fixture pack.
 
 ## Limits
 
@@ -33,4 +35,7 @@ Expected result: TypeScript check, tests, smoke script, and package dry run all 
 
 ## Release Gate
 
-Before tagging or publishing, verify an install dry run against each documented target and review the package contents from `npm run package:smoke`.
+Before tagging, verify an install dry run against each documented target and
+review the package contents from `npm run package:smoke`. A matching version
+tag runs the release workflow, which publishes the public package to npm with
+provenance before creating the GitHub release. Pull requests do not publish.

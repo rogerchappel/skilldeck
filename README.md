@@ -6,16 +6,20 @@ It does **not** call remote services, execute skill content, publish packages, o
 
 ## Install
 
+Until the first npm release is published, install from a source checkout:
+
 ```sh
-npm install -g skilldeck
+git clone https://github.com/rogerchappel/skilldeck.git
+cd skilldeck
+npm ci
+npm run build
+npm install -g .
 ```
 
-For local development:
+After a tagged release is published to npm, the global install is:
 
 ```sh
-npm install
-npm run build
-node dist/src/cli.js --help
+npm install -g skilldeck
 ```
 
 ## Quickstart
@@ -131,7 +135,11 @@ bash scripts/validate.sh
 ```
 
 `npm run release:check` is the release-readiness gate for maintainers. It runs
-type checking, tests, the CLI smoke script, and a dry-run npm package review.
+type checking, tests, the CLI smoke script, then packs the exact npm tarball,
+installs it into an isolated prefix, and runs `skilldeck --help` plus strict
+fixture validation. Tagged releases publish that checked package to npm before
+creating the matching GitHub release; the workflow performs no publication on
+branches or pull requests.
 
 ## License
 
