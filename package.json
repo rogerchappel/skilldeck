@@ -36,6 +36,10 @@
     "validate": "bash scripts/validate.sh",
     "release:check": "npm run check && npm test && npm run smoke && npm run package:smoke"
   },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "keywords": [
     "agent",
     "skills",
