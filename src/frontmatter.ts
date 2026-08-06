@@ -1,6 +1,6 @@
 export function parseFrontmatter(markdown: string): { data: Record<string, unknown>; body: string } {
   const match = /^---\r?\n([\s\S]*?)^---(?:\r?\n|$)/m.exec(markdown);
-  if (!match) return { data: {}, body: markdown };
+  if (!match || match.index !== 0) return { data: {}, body: markdown };
   const raw = match[1].trim();
   const data: Record<string, unknown> = {};
   for (const line of raw.split(/\r?\n/)) {

@@ -31,3 +31,19 @@ test("does not accept malformed delimiter lines", () => {
   const markdown = "---\r\nname: review-code\r\n--- \r\nBody";
   assert.deepEqual(parseFrontmatter(markdown), { data: {}, body: markdown });
 });
+
+test("does not treat a later delimiter block as frontmatter", () => {
+  const documents = [
+    "# Intro\n\n---\nname: wrong\n---\n\nBody",
+    "Intro text\r\n\r\n---\r\nname: wrong\r\n---\r\n\r\nBody"
+  ];
+
+  for (const markdown of documents) {
+    assert.deepEqual(parseFrontmatter(markdown), { data: {}, body: markdown });
+  }
+});
+
+test("requires the opening delimiter at byte zero", () => {
+  const markdown = "\uFEFF---\nname: review-code\n---\nBody";
+  assert.deepEqual(parseFrontmatter(markdown), { data: {}, body: markdown });
+});
