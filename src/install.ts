@@ -14,13 +14,18 @@ export async function installSkillPack(root: string, options: { target: string; 
 
   for (const skill of validation.skills) {
     const destination = path.join(destinationRoot, skill.name);
+    const sourcePath = await canonicalPath(skill.path);
+    const destinationPath = await canonicalPath(destination);
     const exists = await pathExists(destination);
     const action = exists ? (options.force ? "overwrite" : "skip") : "copy";
     entries.push({ skill: skill.name, source: skill.path, destination, action });
+    if (pathsOverlap(sourcePath, destinationPath)) {
+      diagnostics.push({ severity: "error", code: "source-destination-overlap", message: `Refusing to install ${skill.name}: source and destination overlap.`, path: destination });
+    }
     if (exists && !options.force) diagnostics.push({ severity: "warning", code: "destination-exists", message: `Skipping existing skill ${skill.name}; use --force to overwrite.`, path: destination });
   }
 
-  if (!options.dryRun) {
+  if (!options.dryRun && !diagnostics.some((diag) => diag.severity === "error")) {
     await fs.mkdir(destinationRoot, { recursive: true });
     for (const entry of entries) {
       if (entry.action === "skip") continue;
@@ -29,6 +34,21 @@ export async function installSkillPack(root: string, options: { target: string; 
     }
   }
   return { ok: !diagnostics.some((diag) => diag.severity === "error"), target, dryRun: options.dryRun === true, destinationRoot, entries, diagnostics };
+}
+
+async function canonicalPath(file: string): Promise<string> {
+  const resolved = path.resolve(file);
+  try { return await fs.realpath(resolved); } catch {
+    const parent = path.dirname(resolved);
+    if (parent === resolved) return resolved;
+    return path.join(await canonicalPath(parent), path.basename(resolved));
+  }
+}
+
+function pathsOverlap(left: string, right: string): boolean {
+  const relative = path.relative(left, right);
+  const reverse = path.relative(right, left);
+  return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative)) || (!reverse.startsWith("..") && !path.isAbsolute(reverse));
 }
 
 async function pathExists(file: string): Promise<boolean> {

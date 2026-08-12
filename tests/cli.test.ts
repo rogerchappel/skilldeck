@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdtemp, rm } from "node:fs/promises";
+import { access, cp, mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -29,6 +29,21 @@ test("boolean install flags before a path preserve the root and JSON mode", () =
   assert.equal(output.target, "agents");
   assert.equal(output.dryRun, true);
   assert.ok(output.entries.every((entry: { source: string }) => entry.source.startsWith(fixture)));
+});
+
+test("force install exits nonzero without erasing an overlapping source", async () => {
+  const destination = await mkdtemp(path.join(os.tmpdir(), "skilldeck-cli-"));
+  const source = path.join(destination, "review-code");
+  try {
+    await cp(path.join(fixture, "skills", "review-code"), source, { recursive: true });
+    const result = run(["install", source, "--target", "agents", "--dest", destination, "--force", "--json"]);
+    assert.equal(result.status, 1);
+    const output = JSON.parse(result.stdout);
+    assert.equal(output.diagnostics.some((diagnostic: { code: string }) => diagnostic.code === "source-destination-overlap"), true);
+    await access(path.join(source, "SKILL.md"));
+  } finally {
+    await rm(destination, { recursive: true, force: true });
+  }
 });
 
 test("boolean pack flags before a docs path preserve the input and JSON mode", async () => {
