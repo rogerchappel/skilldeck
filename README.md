@@ -121,6 +121,7 @@ Use `--dest` to override any destination. This is recommended in CI and tests.
 - Install is copy-only into the chosen destination.
 - Pack output is confined to a validly named child directory beneath `--out`.
 - Existing skills are skipped unless `--force` is supplied.
+- Install refuses source and destination paths that overlap, even with `--force`, so an overwrite cannot erase or recursively copy its source.
 - Compatibility reports use a fixed timestamp for stable output.
 
 ## Verify
