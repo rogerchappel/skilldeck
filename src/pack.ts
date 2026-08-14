@@ -1,5 +1,6 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { canonicalPath, pathsOverlap } from "./paths.js";
 import { isValidSkillName, SKILL_NAME_CONSTRAINT } from "./skill-name.js";
 
 export async function createSkillFromDocs(options: { docsDir: string; outDir: string; name: string; description?: string; force?: boolean }): Promise<string> {
@@ -13,6 +14,12 @@ export async function createSkillFromDocs(options: { docsDir: string; outDir: st
   const relativeDestination = path.relative(outputRoot, outDir);
   if (!relativeDestination || relativeDestination === ".." || relativeDestination.startsWith(`..${path.sep}`) || path.isAbsolute(relativeDestination)) {
     throw new Error(`Refusing to create skill outside the output directory: ${outDir}`);
+  }
+
+  const sourcePath = await canonicalPath(docsDir);
+  const destinationPath = await canonicalPath(outDir);
+  if (pathsOverlap(sourcePath, destinationPath)) {
+    throw new Error(`Refusing to create skill: source and destination overlap (${docsDir}, ${outDir}).`);
   }
 
   if (!options.force && await exists(outDir)) throw new Error(`Refusing to overwrite existing output: ${outDir}`);
