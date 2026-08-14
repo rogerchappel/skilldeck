@@ -88,3 +88,28 @@ test("keeps valid skill names inside the output directory", async () => {
     await rm(temp, { recursive: true, force: true });
   }
 });
+
+test("force rejects overlapping docs and output without deleting source files", async () => {
+  const temp = await mkdtemp(path.join(os.tmpdir(), "skilldeck-pack-overlap-"));
+  const cases = [
+    { docsDir: path.join(temp, "equal", "project-docs"), outDir: path.join(temp, "equal") },
+    { docsDir: path.join(temp, "source-parent"), outDir: path.join(temp, "source-parent") },
+    { docsDir: path.join(temp, "destination-parent", "project-docs", "docs"), outDir: path.join(temp, "destination-parent") }
+  ];
+
+  try {
+    for (const [index, options] of cases.entries()) {
+      const sentinel = path.join(options.docsDir, `keep-${index}.txt`);
+      await mkdir(options.docsDir, { recursive: true });
+      await writeFile(sentinel, "keep", "utf8");
+
+      await assert.rejects(
+        createSkillFromDocs({ ...options, name: "project-docs", force: true }),
+        /source and destination overlap/
+      );
+      assert.equal(await readFile(sentinel, "utf8"), "keep");
+    }
+  } finally {
+    await rm(temp, { recursive: true, force: true });
+  }
+});
