@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, readdir, rm, symlink, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
@@ -109,6 +109,18 @@ test("force rejects overlapping docs and output without deleting source files", 
       );
       assert.equal(await readFile(sentinel, "utf8"), "keep");
     }
+
+    const linkedDocs = path.join(temp, "linked-source");
+    const linkedOut = path.join(temp, "linked-output");
+    const linkedSentinel = path.join(linkedDocs, "keep.txt");
+    await mkdir(linkedDocs);
+    await writeFile(linkedSentinel, "keep", "utf8");
+    await symlink(linkedDocs, linkedOut, "dir");
+    await assert.rejects(
+      createSkillFromDocs({ docsDir: linkedDocs, outDir: linkedOut, name: "project-docs", force: true }),
+      /source and destination overlap/
+    );
+    assert.equal(await readFile(linkedSentinel, "utf8"), "keep");
   } finally {
     await rm(temp, { recursive: true, force: true });
   }

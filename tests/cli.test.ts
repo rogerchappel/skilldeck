@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { access, cp, mkdtemp, rm } from "node:fs/promises";
+import { access, cp, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -54,6 +54,22 @@ test("boolean pack flags before a docs path preserve the input and JSON mode", a
     const output = JSON.parse(result.stdout);
     assert.equal(output.ok, true);
     assert.equal(output.created, path.join(out, "cli-test"));
+  } finally {
+    await rm(out, { recursive: true, force: true });
+  }
+});
+
+test("force pack exits nonzero without erasing overlapping docs", async () => {
+  const out = await mkdtemp(path.join(os.tmpdir(), "skilldeck-cli-overlap-"));
+  const docs = path.join(out, "project-docs");
+  const sentinel = path.join(docs, "keep.txt");
+  try {
+    await cp(path.join(process.cwd(), "docs"), docs, { recursive: true });
+    await writeFile(sentinel, "keep", "utf8");
+    const result = run(["pack", docs, "--name", "project-docs", "--out", out, "--force"]);
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /source and destination overlap/);
+    await access(sentinel);
   } finally {
     await rm(out, { recursive: true, force: true });
   }
