@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, readdir, rm, symlink, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
@@ -84,6 +84,43 @@ test("keeps valid skill names inside the output directory", async () => {
 
     assert.equal(created, path.join(outDir, "project-docs-2"));
     assert.match(await readFile(path.join(created, "SKILL.md"), "utf8"), /name: project-docs-2/);
+  } finally {
+    await rm(temp, { recursive: true, force: true });
+  }
+});
+
+test("force rejects overlapping docs and output without deleting source files", async () => {
+  const temp = await mkdtemp(path.join(os.tmpdir(), "skilldeck-pack-overlap-"));
+  const cases = [
+    { docsDir: path.join(temp, "equal", "project-docs"), outDir: path.join(temp, "equal") },
+    { docsDir: path.join(temp, "source-parent"), outDir: path.join(temp, "source-parent") },
+    { docsDir: path.join(temp, "destination-parent", "project-docs", "docs"), outDir: path.join(temp, "destination-parent") }
+  ];
+
+  try {
+    for (const [index, options] of cases.entries()) {
+      const sentinel = path.join(options.docsDir, `keep-${index}.txt`);
+      await mkdir(options.docsDir, { recursive: true });
+      await writeFile(sentinel, "keep", "utf8");
+
+      await assert.rejects(
+        createSkillFromDocs({ ...options, name: "project-docs", force: true }),
+        /source and destination overlap/
+      );
+      assert.equal(await readFile(sentinel, "utf8"), "keep");
+    }
+
+    const linkedDocs = path.join(temp, "linked-source");
+    const linkedOut = path.join(temp, "linked-output");
+    const linkedSentinel = path.join(linkedDocs, "keep.txt");
+    await mkdir(linkedDocs);
+    await writeFile(linkedSentinel, "keep", "utf8");
+    await symlink(linkedDocs, linkedOut, "dir");
+    await assert.rejects(
+      createSkillFromDocs({ docsDir: linkedDocs, outDir: linkedOut, name: "project-docs", force: true }),
+      /source and destination overlap/
+    );
+    assert.equal(await readFile(linkedSentinel, "utf8"), "keep");
   } finally {
     await rm(temp, { recursive: true, force: true });
   }

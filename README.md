@@ -61,7 +61,9 @@ Skill names must contain 2–63 lowercase letters, numbers, or hyphens and start
 with a letter or number. `pack` creates that named directory directly beneath
 `--out`; path separators, dot segments, absolute paths, and encoded traversal
 strings are rejected before any output is changed. Use `--force` only to
-replace an existing validly named skill inside `--out`.
+replace an existing validly named skill inside `--out`. The docs directory and
+generated skill directory must not be equal or contain one another, including
+when symbolic links resolve them to overlapping locations.
 
 Generated skills include portable activation, side-effect, and approval
 metadata plus the operational sections required by strict validation. The
@@ -120,6 +122,7 @@ Use `--dest` to override any destination. This is recommended in CI and tests.
 - No skill execution.
 - Install is copy-only into the chosen destination.
 - Pack output is confined to a validly named child directory beneath `--out`.
+- Pack refuses overlapping source and destination paths before changing output, even with `--force`.
 - Existing skills are skipped unless `--force` is supplied.
 - Install refuses source and destination paths that overlap, even with `--force`, so an overwrite cannot erase or recursively copy its source.
 - Compatibility reports use a fixed timestamp for stable output.

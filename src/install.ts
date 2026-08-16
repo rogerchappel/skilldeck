@@ -1,5 +1,6 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { canonicalPath, pathsOverlap } from "./paths.js";
 import { defaultTargetDir, parseTarget } from "./targets.js";
 import { validateSkillPack } from "./validator.js";
 import type { AgentTarget, Diagnostic, InstallPlanEntry, InstallResult } from "./types.js";
@@ -34,21 +35,6 @@ export async function installSkillPack(root: string, options: { target: string; 
     }
   }
   return { ok: !diagnostics.some((diag) => diag.severity === "error"), target, dryRun: options.dryRun === true, destinationRoot, entries, diagnostics };
-}
-
-async function canonicalPath(file: string): Promise<string> {
-  const resolved = path.resolve(file);
-  try { return await fs.realpath(resolved); } catch {
-    const parent = path.dirname(resolved);
-    if (parent === resolved) return resolved;
-    return path.join(await canonicalPath(parent), path.basename(resolved));
-  }
-}
-
-function pathsOverlap(left: string, right: string): boolean {
-  const relative = path.relative(left, right);
-  const reverse = path.relative(right, left);
-  return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative)) || (!reverse.startsWith("..") && !path.isAbsolute(reverse));
 }
 
 async function pathExists(file: string): Promise<boolean> {
