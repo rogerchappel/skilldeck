@@ -39,6 +39,15 @@ jobs:
         run: node /tmp/releasebox/bin/releasebox.js check .
       - name: Run release checks
         run: npm run release:check
+      - name: Build package
+        id: pack
+        run: |
+          npm pack --json > pack.json
+          TARBALL_NAME="$(node -e 'const fs = require("node:fs"); const data = JSON.parse(fs.readFileSync("pack.json", "utf8")); if (data.length !== 1 || !data[0].filename) process.exit(1); process.stdout.write(data[0].filename)')"
+          test -f "$TARBALL_NAME"
+          echo "tarball=$TARBALL_NAME" >> "$GITHUB_OUTPUT"
+      - name: Verify package artifact
+        run: npm run package:smoke -- "${{ steps.pack.outputs.tarball }}"
       - name: Release notes preview
         run: |
           node /tmp/releasebox/bin/releasebox.js notes . > release-notes-preview.md

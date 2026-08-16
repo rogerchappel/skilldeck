@@ -5,10 +5,24 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT
 
-PACK_JSON="$TMP_DIR/pack.json"
-npm pack --json --pack-destination "$TMP_DIR" >"$PACK_JSON"
-TARBALL_NAME="$(node -e 'const fs = require("node:fs"); const data = JSON.parse(fs.readFileSync(process.argv[1], "utf8")); if (data.length !== 1 || !data[0].filename) process.exit(1); process.stdout.write(data[0].filename)' "$PACK_JSON")"
-TARBALL="$TMP_DIR/$TARBALL_NAME"
+if (( $# > 1 )); then
+  echo "usage: $0 [package.tgz]" >&2
+  exit 2
+fi
+
+if (( $# == 1 )); then
+  TARBALL="$1"
+  if [[ ! -f "$TARBALL" ]]; then
+    echo "package tarball not found: $TARBALL" >&2
+    exit 1
+  fi
+else
+  PACK_JSON="$TMP_DIR/pack.json"
+  npm pack --json --pack-destination "$TMP_DIR" >"$PACK_JSON"
+  TARBALL_NAME="$(node -e 'const fs = require("node:fs"); const data = JSON.parse(fs.readFileSync(process.argv[1], "utf8")); if (data.length !== 1 || !data[0].filename) process.exit(1); process.stdout.write(data[0].filename)' "$PACK_JSON")"
+  TARBALL="$TMP_DIR/$TARBALL_NAME"
+fi
+
 PREFIX="$TMP_DIR/prefix"
 
 npm install --global --prefix "$PREFIX" "$TARBALL"
