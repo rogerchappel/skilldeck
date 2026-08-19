@@ -72,6 +72,9 @@ function parse(argv: string[]): Parsed {
     else if (token.startsWith("-") && token.length > 1) throw new Error(`Unknown option '${token}'.`);
     else args.push(token);
   }
+  if (options && args.length > 1) {
+    throw new Error(`Command '${command}' accepts at most one positional path; received ${args.length}.`);
+  }
   return { command, args, flags };
 }
 
