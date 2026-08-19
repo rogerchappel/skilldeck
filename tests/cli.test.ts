@@ -94,3 +94,11 @@ test("unknown and command-inapplicable options fail clearly", () => {
     assert.match(result.stderr, /Unknown option/);
   }
 });
+
+test("commands reject extra positional arguments", () => {
+  for (const command of ["validate", "report", "install", "pack"]) {
+    const result = run([command, fixture, "unexpected-extra"]);
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, new RegExp(`Command '${command}' accepts at most one positional path`));
+  }
+});
