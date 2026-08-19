@@ -57,6 +57,9 @@ skilldeck pack ./docs --name project-docs --out ./skills
 skilldeck validate ./skills/project-docs --strict
 ```
 
+Each command accepts at most one positional path. Supplying extra positional
+arguments is a usage error; paths may appear before or after documented flags.
+
 Skill names must contain 2–63 lowercase letters, numbers, or hyphens and start
 with a letter or number. `pack` creates that named directory directly beneath
 `--out`; path separators, dot segments, absolute paths, and encoded traversal
