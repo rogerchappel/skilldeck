@@ -71,7 +71,9 @@ when symbolic links resolve them to overlapping locations.
 Generated skills include portable activation, side-effect, and approval
 metadata plus the operational sections required by strict validation. The
 embedded documentation is sorted by filename, so identical inputs produce
-identical `SKILL.md` output.
+identical `SKILL.md` output. Custom `--description` values are encoded as quoted
+frontmatter strings; multiline text, punctuation, and YAML-like words such as
+`null` or `true` are preserved as literal description text.
 
 ## Skill layout
 
