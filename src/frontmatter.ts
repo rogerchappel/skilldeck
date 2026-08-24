@@ -21,6 +21,14 @@ function parseValue(value: string): unknown {
     if (!inner) return [];
     return inner.split(",").map((part) => stripQuotes(part.trim())).filter(Boolean);
   }
+  if (value.startsWith('"') && value.endsWith('"')) {
+    try {
+      const parsed = JSON.parse(value);
+      if (typeof parsed === "string") return parsed;
+    } catch {
+      // Preserve the existing permissive behavior for malformed quoted scalars.
+    }
+  }
   return stripQuotes(value);
 }
 
