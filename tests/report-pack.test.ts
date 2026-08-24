@@ -4,6 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 import { createSkillFromDocs } from "../src/pack.js";
+import { parseFrontmatter } from "../src/frontmatter.js";
 import { createCompatibilityReport } from "../src/report.js";
 import { validateSkillPack } from "../src/validator.js";
 
@@ -15,6 +16,30 @@ test("creates deterministic compatibility reports", async () => {
   assert.equal(report.skillCount, 2);
   assert.ok(report.targets.codex.supported.includes("review-code"));
   assert.ok(report.targets.claude.warnings.some((warning) => warning.includes("write-tests")));
+});
+
+test("serializes custom descriptions as unambiguous frontmatter scalars", async () => {
+  const temp = await mkdtemp(path.join(os.tmpdir(), "skilldeck-pack-description-"));
+  const descriptions = [
+    "First line\nsecond line remains part of the description.",
+    "null: [true, false] # still plain description text"
+  ];
+  try {
+    for (const [index, description] of descriptions.entries()) {
+      const created = await createSkillFromDocs({
+        docsDir: path.join(process.cwd(), "docs"),
+        outDir: temp,
+        name: `description-${index}`,
+        description
+      });
+      const skill = await readFile(path.join(created, "SKILL.md"), "utf8");
+      assert.equal(parseFrontmatter(skill).data.description, description);
+      const validation = await validateSkillPack(created, { strict: true });
+      assert.equal(validation.ok, true, validation.diagnostics.map((diagnostic) => diagnostic.message).join("\n"));
+    }
+  } finally {
+    await rm(temp, { recursive: true, force: true });
+  }
 });
 
 test("packs local docs into a deterministic, strictly valid SKILL.md", async () => {

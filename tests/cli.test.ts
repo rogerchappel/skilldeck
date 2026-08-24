@@ -59,6 +59,24 @@ test("boolean pack flags before a docs path preserve the input and JSON mode", a
   }
 });
 
+test("pack preserves multiline and YAML-like descriptions through strict validation", async () => {
+  const out = await mkdtemp(path.join(os.tmpdir(), "skilldeck-cli-description-"));
+  const descriptions = ["First line\nsecond line remains intact.", "false: [null] # description"];
+  try {
+    for (const [index, description] of descriptions.entries()) {
+      const name = `cli-description-${index}`;
+      const packed = run(["pack", "docs", "--name", name, "--out", out, "--description", description]);
+      assert.equal(packed.status, 0, packed.stderr);
+      const validated = run(["validate", path.join(out, name), "--strict", "--json"]);
+      assert.equal(validated.status, 0, validated.stderr || validated.stdout);
+      const result = JSON.parse(validated.stdout);
+      assert.equal(result.skills[0].metadata.description, description);
+    }
+  } finally {
+    await rm(out, { recursive: true, force: true });
+  }
+});
+
 test("force pack exits nonzero without erasing overlapping docs", async () => {
   const out = await mkdtemp(path.join(os.tmpdir(), "skilldeck-cli-overlap-"));
   const docs = path.join(out, "project-docs");

@@ -22,6 +22,11 @@ test("parses equivalent LF and CRLF frontmatter", () => {
   assert.equal(crlf.body, "## When To Use\r\n\r\nUse this skill for code review.");
 });
 
+test("decodes JSON-quoted string scalars", () => {
+  const parsed = parseFrontmatter('---\ndescription: "First line\\nnull: [true]"\n---\nBody');
+  assert.equal(parsed.data.description, "First line\nnull: [true]");
+});
+
 test("leaves unclosed frontmatter untouched", () => {
   const markdown = "---\r\nname: review-code\r\n## When To Use";
   assert.deepEqual(parseFrontmatter(markdown), { data: {}, body: markdown });
