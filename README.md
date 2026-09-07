@@ -70,8 +70,10 @@ when symbolic links resolve them to overlapping locations.
 
 Generated skills include portable activation, side-effect, and approval
 metadata plus the operational sections required by strict validation. The
-embedded documentation is sorted by filename, so identical inputs produce
-identical `SKILL.md` output. Custom `--description` values are encoded as quoted
+embedded `.md` and `.txt` documentation is collected recursively and sorted by
+its relative path, which is also used as each section label, so identical inputs
+produce identical `SKILL.md` output. `pack` fails without creating a skill when
+the docs tree contains no supported source files. Custom `--description` values are encoded as quoted
 frontmatter strings; multiline text, punctuation, and YAML-like words such as
 `null` or `true` are preserved as literal description text.
 
