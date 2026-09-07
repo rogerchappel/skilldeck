@@ -62,6 +62,67 @@ test("packs local docs into a deterministic, strictly valid SKILL.md", async () 
   }
 });
 
+test("recursively packs nested documentation in relative-path order", async () => {
+  const temp = await mkdtemp(path.join(os.tmpdir(), "skilldeck-pack-nested-"));
+  const docsDir = path.join(temp, "docs");
+  try {
+    await mkdir(path.join(docsDir, "guides", "advanced"), { recursive: true });
+    await writeFile(path.join(docsDir, "z.txt"), "Top-level text marker.", "utf8");
+    await writeFile(path.join(docsDir, "guides", "intro.md"), "Nested intro marker.", "utf8");
+    await writeFile(path.join(docsDir, "guides", "advanced", "deep.txt"), "Deep marker.", "utf8");
+    await writeFile(path.join(docsDir, "guides", "ignored.json"), "Not documentation.", "utf8");
+
+    const created = await createSkillFromDocs({ docsDir, outDir: path.join(temp, "out"), name: "nested-docs" });
+    const skill = await readFile(path.join(created, "SKILL.md"), "utf8");
+
+    const labels = ["guides/advanced/deep.txt", "guides/intro.md", "z.txt"];
+    assert.deepEqual(labels.map((label) => skill.indexOf(`## ${label}`)), [...labels].map((label) => skill.indexOf(`## ${label}`)).sort((a, b) => a - b));
+    for (const marker of ["Deep marker.", "Nested intro marker.", "Top-level text marker."]) {
+      assert.equal(skill.split(marker).length - 1, 1);
+    }
+    assert.doesNotMatch(skill, /Not documentation/);
+    assert.match(skill, /Skill generated from 3 local documentation files/);
+    assert.equal((await validateSkillPack(created, { strict: true })).ok, true);
+  } finally {
+    await rm(temp, { recursive: true, force: true });
+  }
+});
+
+test("rejects documentation trees without supported source files", async () => {
+  const temp = await mkdtemp(path.join(os.tmpdir(), "skilldeck-pack-empty-"));
+  const docsDir = path.join(temp, "docs");
+  const outDir = path.join(temp, "out");
+  try {
+    await mkdir(path.join(docsDir, "nested"), { recursive: true });
+    await writeFile(path.join(docsDir, "nested", "data.json"), "{}", "utf8");
+
+    await assert.rejects(
+      createSkillFromDocs({ docsDir, outDir, name: "empty-docs" }),
+      /No supported documentation files.*\.md.*\.txt/i
+    );
+    await assert.rejects(readdir(outDir), { code: "ENOENT" });
+  } finally {
+    await rm(temp, { recursive: true, force: true });
+  }
+});
+
+test("packs a documentation tree containing only nested sources", async () => {
+  const temp = await mkdtemp(path.join(os.tmpdir(), "skilldeck-pack-nested-only-"));
+  const docsDir = path.join(temp, "docs");
+  try {
+    await mkdir(path.join(docsDir, "reference"), { recursive: true });
+    await writeFile(path.join(docsDir, "reference", "only.md"), "Nested-only marker.", "utf8");
+
+    const created = await createSkillFromDocs({ docsDir, outDir: path.join(temp, "out"), name: "nested-only" });
+    const skill = await readFile(path.join(created, "SKILL.md"), "utf8");
+    assert.match(skill, /## reference\/only\.md/);
+    assert.equal(skill.split("Nested-only marker.").length - 1, 1);
+    assert.equal((await validateSkillPack(created, { strict: true })).ok, true);
+  } finally {
+    await rm(temp, { recursive: true, force: true });
+  }
+});
+
 test("rejects invalid skill names without changing the filesystem", async () => {
   const temp = await mkdtemp(path.join(os.tmpdir(), "skilldeck-pack-invalid-"));
   const outDir = path.join(temp, "out");
