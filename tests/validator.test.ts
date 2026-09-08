@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import path from "node:path";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
 import { validateSkillPack } from "../src/validator.js";
 
 const valid = path.join(process.cwd(), "fixtures/valid-pack");
@@ -67,4 +69,40 @@ test("keeps activation and side-effect metadata in validation results", async ()
   assert.deepEqual(writeTests?.metadata.activation, ["add regression tests", "create fixture-backed coverage"]);
   assert.deepEqual(writeTests?.metadata.sideEffects, ["edits tests and fixtures"]);
   assert.deepEqual(writeTests?.metadata.approvalRequired, ["dependency installs", "broad snapshot updates"]);
+});
+
+test("validates quoted comma-bearing flow-array metadata as single values", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "skilldeck-flow-array-"));
+  try {
+    await writeFile(path.join(root, "SKILL.md"), `---
+name: quoted-arrays
+description: Exercise quoted flow arrays.
+version: 0.1.0
+activation: ["review code, tests"]
+sideEffects: ["edit files, tests"]
+approvalRequired: ["before publish, deploy"]
+---
+# Quoted Arrays
+## When To Use
+Review code and tests together.
+## Inputs
+Code and tests.
+## Side Effects
+Edits files and tests.
+## Approval
+Ask before publishing or deploying.
+## Examples
+Review code and tests.
+## Validation
+Run the test suite and record the results.
+`, "utf8");
+    const result = await validateSkillPack(root, { strict: true });
+    assert.equal(result.ok, true);
+    assert.deepEqual(result.skills[0].metadata.activation, ["review code, tests"]);
+    assert.deepEqual(result.skills[0].metadata.sideEffects, ["edit files, tests"]);
+    assert.deepEqual(result.skills[0].metadata.approvalRequired, ["before publish, deploy"]);
+    assert.equal(result.diagnostics.some((diagnostic) => diagnostic.code === "vague-activation"), false);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });

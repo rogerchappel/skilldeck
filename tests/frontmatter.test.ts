@@ -27,6 +27,21 @@ test("decodes JSON-quoted string scalars", () => {
   assert.equal(parsed.data.description, "First line\nnull: [true]");
 });
 
+test("preserves commas and supported escapes in quoted flow-array values", () => {
+  const parsed = parseFrontmatter([
+    "---",
+    'activation: ["review code, tests"]',
+    "sideEffects: ['edit files, tests', 'author''s notes']",
+    'approvalRequired: ["before publish, deploy", "quote: \\"ready\\""]',
+    "---",
+    "Body"
+  ].join("\n"));
+
+  assert.deepEqual(parsed.data.activation, ["review code, tests"]);
+  assert.deepEqual(parsed.data.sideEffects, ["edit files, tests", "author's notes"]);
+  assert.deepEqual(parsed.data.approvalRequired, ["before publish, deploy", 'quote: "ready"']);
+});
+
 test("leaves unclosed frontmatter untouched", () => {
   const markdown = "---\r\nname: review-code\r\n## When To Use";
   assert.deepEqual(parseFrontmatter(markdown), { data: {}, body: markdown });
