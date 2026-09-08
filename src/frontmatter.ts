@@ -19,8 +19,41 @@ function parseValue(value: string): unknown {
   if (value.startsWith("[") && value.endsWith("]")) {
     const inner = value.slice(1, -1).trim();
     if (!inner) return [];
-    return inner.split(",").map((part) => stripQuotes(part.trim())).filter(Boolean);
+    return splitFlowArray(inner).map((part) => parseScalar(part.trim())).filter(Boolean);
   }
+  return parseScalar(value);
+}
+
+function splitFlowArray(value: string): string[] {
+  const values: string[] = [];
+  let start = 0;
+  let quote: "'" | '"' | undefined;
+
+  for (let index = 0; index < value.length; index += 1) {
+    const character = value[index];
+    if (quote === '"' && character === "\\") {
+      index += 1;
+      continue;
+    }
+    if (quote === "'" && character === "'" && value[index + 1] === "'") {
+      index += 1;
+      continue;
+    }
+    if (character === "'" || character === '"') {
+      quote = quote === character ? undefined : quote ?? character;
+      continue;
+    }
+    if (character === "," && !quote) {
+      values.push(value.slice(start, index));
+      start = index + 1;
+    }
+  }
+
+  values.push(value.slice(start));
+  return values;
+}
+
+function parseScalar(value: string): string {
   if (value.startsWith('"') && value.endsWith('"')) {
     try {
       const parsed = JSON.parse(value);
@@ -28,6 +61,9 @@ function parseValue(value: string): unknown {
     } catch {
       // Preserve the existing permissive behavior for malformed quoted scalars.
     }
+  }
+  if (value.startsWith("'") && value.endsWith("'")) {
+    return value.slice(1, -1).replace(/''/g, "'");
   }
   return stripQuotes(value);
 }
