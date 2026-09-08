@@ -110,6 +110,12 @@ Instructions go here.
 ```
 
 Frontmatter delimiters and content may use either LF or CRLF line endings.
+The supported frontmatter subset is one `key: value` entry per line, with plain
+or quoted string scalars and single-line flow arrays. Array elements are split
+only on commas outside quotes, so quote comma-bearing elements. Double-quoted
+elements use JSON string escapes (for example, `\"` and `\\`); single-quoted
+elements escape an apostrophe by doubling it (`''`). Multiline YAML values,
+block collections, anchors, tags, and nested objects are not supported.
 
 For portable skills, use clear headings such as `## When To Use`, `## Inputs`, `## Side Effects`, `## Approval`, `## Examples`, and `## Validation`. These headings make review and installation safer across agent hosts. Keep activation phrases specific enough to match user intent, and list any side effects or approvals in both frontmatter and body text.
 
