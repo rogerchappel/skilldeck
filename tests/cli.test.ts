@@ -77,6 +77,49 @@ test("pack preserves multiline and YAML-like descriptions through strict validat
   }
 });
 
+test("validate and report preserve quoted comma-bearing flow-array metadata", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "skilldeck-cli-flow-array-"));
+  try {
+    await writeFile(path.join(root, "SKILL.md"), `---
+name: quoted-arrays
+description: Exercise quoted flow arrays.
+version: 0.1.0
+activation: ["review code, tests"]
+sideEffects: ["edit files, tests"]
+approvalRequired: ["before publish, deploy"]
+---
+# Quoted Arrays
+## When To Use
+Review code and tests together.
+## Inputs
+Code and tests.
+## Side Effects
+Edits files and tests.
+## Approval
+Ask before publishing or deploying.
+## Examples
+Review code and tests.
+## Validation
+Run the test suite and record the results.
+`, "utf8");
+    const validated = run(["validate", root, "--strict", "--json"]);
+    assert.equal(validated.status, 0, validated.stderr || validated.stdout);
+    const validation = JSON.parse(validated.stdout);
+    assert.deepEqual(validation.skills[0].metadata.activation, ["review code, tests"]);
+    assert.deepEqual(validation.skills[0].metadata.sideEffects, ["edit files, tests"]);
+    assert.deepEqual(validation.skills[0].metadata.approvalRequired, ["before publish, deploy"]);
+    assert.equal(validation.diagnostics.some((diagnostic: { code: string }) => diagnostic.code === "vague-activation"), false);
+
+    const reported = run(["report", root, "--json"]);
+    assert.equal(reported.status, 0, reported.stderr || reported.stdout);
+    const report = JSON.parse(reported.stdout);
+    assert.equal(report.skillCount, 1);
+    assert.equal(report.diagnostics.some((diagnostic: { code: string }) => diagnostic.code === "vague-activation"), false);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test("force pack exits nonzero without erasing overlapping docs", async () => {
   const out = await mkdtemp(path.join(os.tmpdir(), "skilldeck-cli-overlap-"));
   const docs = path.join(out, "project-docs");
